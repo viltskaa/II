@@ -1,5 +1,11 @@
+from __future__ import annotations
+
 from pandas import DataFrame, cut, concat
+import matplotlib.pyplot as plt
 import random
+import math
+from sklearn.linear_model import LinearRegression
+from sklearn import preprocessing
 
 
 def data_analysis(dataframe: DataFrame, column_to_research: str) -> DataFrame:
@@ -51,3 +57,79 @@ def append_dataset(dataframe: DataFrame,
         dataframe_all = dataframe_all.sample(frac=1)
     dataframe_all.to_csv(filename, index=False)
     return dataframe_all
+
+
+def create_regression_model(dataframe: DataFrame, columns: [str, str]) -> LinearRegression:
+    x = dataframe[columns[0]].to_numpy().reshape((-1, 1))
+    y = dataframe[columns[1]].to_numpy()
+
+    model = LinearRegression()
+    model.fit(x, y)
+
+    return model
+
+
+def create_regression_data(dataframe: DataFrame,
+                           columns: list[str, str],
+                           percents: list[float, float] | tuple[float, float] = (0.99, 0.1),
+                           shuffle: bool = False,
+                           normalize_data: bool = False,
+                           test_on_all_dataframe: bool = False) -> DataFrame | None:
+    if sum(percents) != 1:
+        raise Exception()
+    dataframe = dataframe[columns]
+    if shuffle:
+        dataframe = dataframe.sample(frac=1)
+    if normalize_data:
+        df_nr = preprocessing.normalize(dataframe, axis=0)
+        dataframe = DataFrame(df_nr, columns=dataframe.columns.values)
+    rows = dataframe.shape[0]
+    df99p = dataframe.iloc[0:math.ceil(rows * percents[0])]
+    df1p = dataframe.iloc[math.ceil(rows * percents[0]):rows]
+
+    model = create_regression_model(df99p, columns)
+
+    if test_on_all_dataframe:
+        y_pred = model.predict(dataframe[columns[0]].to_numpy().reshape((-1, 1)))
+        return DataFrame({
+            f"{columns[0]}": dataframe[columns[0]],
+            f"Original {columns[1]}": dataframe[columns[1]],
+            f"Predicted {columns[1]}": y_pred,
+            "Difference": map(lambda x: x[0] / x[1] - 1, zip(dataframe[columns[1]], y_pred))
+        }).reset_index(drop=True)
+
+    y_pred = model.predict(df1p[columns[0]].to_numpy().reshape((-1, 1)))
+    return DataFrame({
+        f"{columns[0]}": df1p[columns[0]],
+        f"Original {columns[1]}": df1p[columns[1]],
+        f"Predicted {columns[1]}": y_pred,
+        "Difference": map(lambda x: x[0] / x[1] - 1, zip(df1p[columns[1]], y_pred))
+    }).reset_index(drop=True)
+
+
+def statistic_dataframe(dataframe: DataFrame, column: str) -> DataFrame:
+    return dataframe[column].describe().to_frame().transpose()
+
+
+def get_plot_from_dataset(dataframe: DataFrame, x: str, y: [str, str], filename: str = 'static/plot.png'):
+    plt.rcParams.update({
+        "lines.color": "white",
+        "patch.edgecolor": "white",
+        "text.color": "black",
+        "axes.facecolor": "white",
+        "axes.edgecolor": "lightgray",
+        "axes.labelcolor": "white",
+        "xtick.color": "white",
+        "ytick.color": "white",
+        "grid.color": "lightgray",
+        "figure.facecolor": "black",
+        "figure.edgecolor": "black",
+        "savefig.facecolor": "black",
+        "savefig.edgecolor": "black"})
+    df_pred = dataframe.sort_values(by=x)
+    df_pred.plot(
+        kind='line',
+        x=x,
+        y=y
+    )
+    plt.savefig(filename, edgecolor='White', transparent=True)

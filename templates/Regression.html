@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pair Regression</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+</head>
+<body class="container-md">
+<a href="/" type="button" class="btn btn-dark position-absolute mt-2 ms-4">Back</a>
+<form action="/pair_regression_view"
+      class="w-100 vh-100 d-flex justify-content-center aligh-items-center">
+    <div class="w-100 p-4 d-flex justify-content-center aligh-items-center flex-column">
+        <h1>Pair Regression</h1>
+        <div class="d-flex mb-3">
+            <select class="form-select form-select-sm mb-2 w-50 me-1" name="FirstPair" required>
+                {% for item in columns %}
+                    <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm mb-2 w-50 ms-1" name="SecondPair" required>
+                {% for item in columns %}
+                    <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="input-group mb-3">
+            <label for="customRange1" class="form-label">Regression / Test</label>
+            <div class="form-check ms-2">
+                <input class="form-check-input" type="checkbox" id="TestDatasetCheck" name="TestDatasetCheck">
+                <label class="form-check-label" for="TestDatasetCheck">
+                    Test on all dataset
+                </label>
+            </div>
+            <span id="passwordHelpInline" class="form-text w-100">
+                <span style="color: red;">*</span>Default test complete with 1% of data in dataset
+            </span>
+            <input type="range" class="form-range" min="1" max="100" value="99" name="RangePers">
+            <span id="passwordHelpInline" class="form-text">
+                <span style="color: red;">*</span>Percentage ratio of training and testing data. Default is 99% and 1%
+            </span>
+        </div>
+        <div class="d-flex mb-3">
+            <div class="form-check me-2">
+                <input class="form-check-input" type="checkbox" value="" id="ShuffleCheck" name="ShuffleCheck">
+                <label class="form-check-label" for="ShuffleCheck">
+                    Shuffle
+                </label>
+            </div>
+            <div class="form-check me-2">
+                <input class="form-check-input" type="checkbox" value="" id="NormalizeCheck" name="NormalizeCheck">
+                <label class="form-check-label" for="NormalizeCheck">
+                    Normalize
+                </label>
+            </div>
+            <div class="form-check me-2">
+                <input class="form-check-input" type="checkbox" value="" id="StatsCheck" name="StatsCheck">
+                <label class="form-check-label" for="StatsCheck">
+                    View stats
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-dark mt-1">Go</button>
+    </div>
+</form>
+</body>
+</html>

@@ -10,18 +10,12 @@
             crossorigin="anonymous"></script>
 </head>
 <body class="d-flex justify-content-center flex-column p-1 flex-wrap">
-<a class="btn btn-dark w-100 mb-3" href="/s">search</a>
+<a class="btn btn-dark mb-3" href="/">Back</a>
 <form action="/view" class="w-100">
     <div class="input-group mb-1">
         <span class="input-group-text w-25" id="basic-addon1">Row Start</span>
         <input type="number" class="form-control" name="row_start" value="0">
     </div>
-{#    <div class="input-group mb-1">#}
-{#        <select class="form-select" aria-label="Default select example">#}
-{#            <option value="1">Old csv</option>#}
-{#            <option value="2">New csv</option>#}
-{#        </select>#}
-{#    </div>#}
     <div class="input-group mb-1">
         <span class="input-group-text w-25" id="basic-addon1">Row End</span>
         <input type="number" class="form-control" name="row_end" value="{{ rows_count }}">

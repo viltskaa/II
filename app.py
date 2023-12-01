@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect
+
+import utils
 from utils import data_analysis
 from Structs import blume_filter
 import pandas as pd
@@ -7,18 +9,14 @@ app = Flask(__name__)
 csv_filename = 'datasets/diabetes.csv'
 params_to_analysis = ["BloodPressure", "Insulin", "BMI", "Pregnancies"]
 
-"""
-
-Задание 1. Минимальное, среднее, максимальное АД по возрастным группам +
-Задание 2. Минимальное, среднее, значение инсулина по возрастным группам + 
-Задание 3. Минимальное, среднее, значение ИМТ по возрастным группам +
-Задание 4. Минимальное, среднее,значение количества беременностей по возрастным группам
-
-"""
-
 
 @app.route('/')
 def main_page():
+    return render_template("index.html")
+
+
+@app.route('/csv')
+def csv_page():
     df = pd.read_csv(csv_filename)
     return render_template(
         "CsvView.html",
@@ -30,7 +28,7 @@ def main_page():
     )
 
 
-@app.route('/view', methods=['GET'])
+@app.route('/csv_view', methods=['GET'])
 def view_page():
     data_analysis_check = request.args.get("data_analysis") == 'on'
 
@@ -59,12 +57,12 @@ def view_page():
     )
 
 
-@app.route('/s', methods=['GET'])
+@app.route('/finder', methods=['GET'])
 def search_blume_get():
     return render_template('finder.html')
 
 
-@app.route('/search', methods=['GET'])
+@app.route('/finder_result', methods=['GET'])
 def search_blume_post():
     arg = request.args['arg']
 
@@ -72,6 +70,69 @@ def search_blume_post():
         return render_template("NotFound.html")
 
     return redirect("/")
+
+
+@app.route('/pair_regression', methods=['GET'])
+def pair_regression_page():
+    df = pd.read_csv(csv_filename, index_col=0, nrows=0)
+    return render_template("Regression.html", columns=df.columns.values.tolist())
+
+
+@app.route('/pair_regression_view', methods=['GET'])
+def pair_regression_view():
+    df = pd.read_csv(csv_filename)
+    args = request.args
+
+    column_name_1, column_name_2 = args.get("FirstPair"), args.get("SecondPair")
+    if column_name_1 is None or column_name_2 is None:
+        return redirect("/pair_regression")
+
+    if column_name_1 == column_name_2:
+        return redirect("/pair_regression")
+
+    perc = int(args.get("RangePers")) / 100
+
+    dataframe_regression_data = utils.create_regression_data(
+        df,
+        [args["FirstPair"], args["SecondPair"]],
+        [perc, 1 - perc],
+        shuffle="ShuffleCheck" in args,
+        normalize_data="NormalizeCheck" in args,
+        test_on_all_dataframe="TestDatasetCheck" in args
+    )
+
+    utils.get_plot_from_dataset(
+        dataframe_regression_data,
+        args["FirstPair"],
+        [f"Original {args['SecondPair']}", f"Predicted {args['SecondPair']}"]
+    )
+
+    dataframe_stats_data = [
+        utils.statistic_dataframe(dataframe_regression_data, f"Original {args['SecondPair']}").round(2),
+        utils.statistic_dataframe(dataframe_regression_data, f"Predicted {args['SecondPair']}").round(2)
+    ] if "StatsCheck" in args else None
+
+    return render_template(
+        "RegressionView.html",
+        tags=[
+            "Shuffled" if "ShuffleCheck" in args else None,
+            "Normalized" if "NormalizeCheck" in args else None,
+            "All Data Test" if "TestDatasetCheck" in args else None,
+            f'{args["FirstPair"]} -> {args["SecondPair"]}'
+        ],
+        regression_data=dataframe_regression_data.to_html(
+            classes='table border-0 table-dark',
+            index=False,
+            justify='left'),
+        stats_before=dataframe_stats_data[0].to_html(
+            classes='table border-0 table-dark',
+            index=False,
+            justify='left') if dataframe_stats_data is not None else None,
+        stats_after=dataframe_stats_data[1].to_html(
+            classes='table border-0 table-dark',
+            index=False,
+            justify='left') if dataframe_stats_data is not None else None
+    )
 
 
 if __name__ == '__main__':
