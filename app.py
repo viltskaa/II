@@ -120,7 +120,7 @@ def pair_regression_view():
             "All Data Test" if "TestDatasetCheck" in args else None,
             f'{args["FirstPair"]} -> {args["SecondPair"]}'
         ],
-        regression_data=dataframe_regression_data.to_html(
+        regression_data=dataframe_regression_data.iloc[0:20].to_html(
             classes='table border-0 table-dark',
             index=False,
             justify='left'),

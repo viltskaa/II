@@ -130,6 +130,7 @@ def get_plot_from_dataset(dataframe: DataFrame, x: str, y: [str, str], filename:
     df_pred.plot(
         kind='line',
         x=x,
-        y=y
+        y=y,
+        color=["darkgray", "white"]
     )
     plt.savefig(filename, edgecolor='White', transparent=True)
