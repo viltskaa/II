@@ -135,6 +135,60 @@ def pair_regression_view():
     )
 
 
+@app.route('/desicion_tree', methods=['GET'])
+def desicion_tree():
+    df = pd.read_csv(csv_filename)
+    columns = df.columns.values.tolist()
+    rows = len(df)
+    return render_template(
+        "DesicionTree.html",
+        columns_count=len(columns),
+        columns=columns,
+        rows_count=rows
+    )
+
+
+@app.route('/desicion_tree_view', methods=['POST'])
+def desicion_tree_view():
+    args = request.form
+
+    df = pd.read_csv(csv_filename)
+    column_x = args.getlist("ColumnX")
+    column_y = args.get("ColumnY")
+    criterion = args.get("Criterion")
+
+    if column_y in column_x:
+        return redirect("/desicion_tree")
+
+    predict, score, dataframe = utils.get_predict_from_desicion_tree(
+        dataframe=df,
+        x=column_x,
+        y=column_y,
+        input_rows=int(args.get("InputRows")),
+        output_rows=int(args.get("OutputRows")) if "TestAllCheck" not in args else len(df),
+        criterion=criterion,
+        shuffle="ShuffleCheck" in args
+    )
+
+    dataframe_plot = dataframe.reset_index(drop=True)
+    dataframe_plot.reset_index(inplace=True)
+    dataframe_plot = dataframe_plot[["index", column_y, f"Predicted {column_y}"]]
+    utils.get_plot_from_dataset(
+        dataframe=dataframe_plot,
+        x="index",
+        y=[column_y, f"Predicted {column_y}"]
+    )
+
+    return render_template(
+        "DesicionTreeView.html",
+        score=score,
+        desicion_data=dataframe.head(15).to_html(
+            classes='table border-0 table-dark',
+            index=False,
+            justify='left')
+    )
+
+
 if __name__ == '__main__':
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True

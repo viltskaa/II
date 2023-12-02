@@ -6,6 +6,7 @@ import random
 import math
 from sklearn.linear_model import LinearRegression
 from sklearn import preprocessing
+from sklearn.tree import DecisionTreeClassifier, BaseDecisionTree, plot_tree
 
 
 def data_analysis(dataframe: DataFrame, column_to_research: str) -> DataFrame:
@@ -111,7 +112,10 @@ def statistic_dataframe(dataframe: DataFrame, column: str) -> DataFrame:
     return dataframe[column].describe().to_frame().transpose()
 
 
-def get_plot_from_dataset(dataframe: DataFrame, x: str, y: [str, str], filename: str = 'static/plot.png'):
+def get_plot_from_dataset(dataframe: DataFrame,
+                          x: str,
+                          y: list[str, str],
+                          filename: str = 'static/plot.png'):
     plt.rcParams.update({
         "lines.color": "white",
         "patch.edgecolor": "white",
@@ -134,3 +138,49 @@ def get_plot_from_dataset(dataframe: DataFrame, x: str, y: [str, str], filename:
         color=["darkgray", "white"]
     )
     plt.savefig(filename, edgecolor='White', transparent=True)
+
+
+def create_desicion_tree(dataframe: DataFrame,
+                         x: list[str, str] | tuple[str, str],
+                         y: str,
+                         count_rows: int = 25,
+                         criterion: str = 'entropy') -> tuple[DecisionTreeClassifier, float]:
+    model = DecisionTreeClassifier(criterion=criterion)
+    dataframe = dataframe.head(count_rows)
+    data_x = dataframe[x]
+    data_y = dataframe[y]
+    model.fit(data_x, data_y)
+    score = model.score(data_x, data_y)
+
+    return model, score
+
+
+def get_predict_from_desicion_tree(dataframe: DataFrame,
+                                   x: list[str, str] | tuple[str, str],
+                                   y: str,
+                                   input_rows: int,
+                                   output_rows: int,
+                                   shuffle: bool = False,
+                                   criterion: str = 'entropy') -> tuple[DecisionTreeClassifier, float, DataFrame]:
+    model, score = create_desicion_tree(dataframe,
+                                        x, y, input_rows,
+                                        criterion=criterion)
+    if shuffle:
+        dataframe = dataframe.sample(frac=1)
+    test_data: DataFrame = dataframe[x].iloc[input_rows:input_rows+output_rows]
+    predicted: BaseDecisionTree = model.predict(test_data)
+
+    output_dataframe = dataframe[[*x, y]].iloc[0:output_rows]
+    output_dataframe[f"Predicted {y}"] = predicted
+
+    return model, score, output_dataframe
+
+
+def get_plot_tree(model: DecisionTreeClassifier,
+                  feature_names: list[str] | None = None,
+                  class_names: list[str] | None = None,
+                  filled: bool = True):
+    return plot_tree(model,
+                     feature_names=feature_names,
+                     class_names=class_names,
+                     filled=filled)
